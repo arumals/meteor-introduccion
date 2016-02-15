@@ -1,12 +1,54 @@
-Websites = new Mongo.Collection("websites");
+Router.configure({
+	layoutTemplate : 'application_layout'
+});
 
-// Security over remove and insert for Websites
+Router.route('/',function () {
+	this.render('navbar',{
+		to : 'navbar'
+	});
+	this.render('website_list')
+});
+
+Router.route('/website/:id',function () {
+	this.render('navbar',{
+		to : 'navbar'
+	});
+	this.render('comments_list',{
+		to : 'footer',
+		data : function () {
+			return Websites.findOne({ _id : this.params.id });
+		}
+	});
+	this.render('website_details',{
+		data : function () {
+			return Websites.findOne({ _id : this.params.id });
+		}
+	});
+});
+
+Websites = new Mongo.Collection("websites");
+Comments = new Mongo.Collection("comments");
+
+// Security over
 Websites.allow({
 	insert : function (user_id, doc) {
 		return Meteor.user();
 	},
 	remove : function (user_id, doc) {
 		return false;
+	},
+	update : function (user_id, doc) {
+		return Meteor.user();
+	}
+});
+
+// Security over comments
+Comments.allow({
+	insert : function (user_id, doc) {
+		return Meteor.user();
+	},
+	remove : function (user_id, doc) {
+		return Meteor.user();
 	},
 	update : function (user_id, doc) {
 		return Meteor.user();
@@ -36,7 +78,19 @@ if (Meteor.isClient) {
 	// template events 
 	/////
 
-	Template.website_item.events({
+	var website_helpers = {
+		total_votes : function () {
+			return this.votes ? this.votes : 0;
+		},
+		total_comments : function () {
+			return Comments.find({ website : this._id }).count();
+		}
+	};
+
+	Template.website.helpers(website_helpers);
+	Template.website_details.helpers(website_helpers);
+
+	Template.website.events({
 		"click .js-upvote":function(event){
 
 			if(Meteor.user()){
@@ -62,18 +116,26 @@ if (Meteor.isClient) {
 			$("#website_form").toggle('slow');
 		}, 
 		"submit .js-save-website-form":function(event){
+
+			var target = event.target;
 			
 			//  put your website saving code in here!
 			if(Meteor.user()){
 
-				console.log("Insert new website");
-
 				Websites.insert({
-					title : 		event.target.title.value,
-					url : 			event.target.url.value,
-					description : 	event.target.description.value,
-					createdOn : 	new Date()
+					title : 		target.title.value,
+					url : 			target.url.value,
+					description : 	target.description.value,
+					created_on : 	new Date()
 				});
+
+				// clean after insert
+				target.title.value = "";
+				target.url.value = "";
+				target.description.value = "";
+
+				// close form
+				$("#website_form").hide("slow");
 
 			}
 
@@ -82,6 +144,40 @@ if (Meteor.isClient) {
 
 		}
 	});
+
+	Template.comments_list.helpers({
+		comments : function () {
+			return Comments.find({ website : this._id },{ sort : { created_on : -1 }});
+		}
+	});
+
+	Template.comment.helpers({
+		author_name : function () {
+			return Meteor.users.findOne({ _id : this.author }).username;
+		}
+	});
+
+	Template.comments_form.events({
+		"submit .js-add-comment" : function (event) {
+
+			event.preventDefault();
+
+			if(Meteor.user()){
+				
+				Comments.insert({
+					website: this._id,
+					content : event.target.content.value,
+					author : Meteor.user()._id,
+					created_on : new Date()
+				});
+
+				event.target.content.value = "";
+
+			}
+
+		}
+	});
+
 }
 
 
@@ -99,28 +195,28 @@ if (Meteor.isServer) {
     		title:"Goldsmiths Computing Department", 
     		url:"http://www.gold.ac.uk/computing/", 
     		description:"This is where this course was developed.", 
-    		createdOn:new Date()
+    		created_on:new Date()
     	});
     	
     	Websites.insert({
     		title:"University of London", 
     		url:"http://www.londoninternational.ac.uk/courses/undergraduate/goldsmiths/bsc-creative-computing-bsc-diploma-work-entry-route", 
     		description:"University of London International Programme.", 
-    		createdOn:new Date()
+    		created_on:new Date()
     	});
     	
     	Websites.insert({
     		title:"Coursera", 
     		url:"http://www.coursera.org", 
     		description:"Universal access to the world’s best education.", 
-    		createdOn:new Date()
+    		created_on:new Date()
     	});
     	
     	Websites.insert({
     		title:"Google", 
     		url:"http://www.google.com", 
     		description:"Popular search engine.", 
-    		createdOn:new Date()
+    		created_on:new Date()
     	});
 
     }

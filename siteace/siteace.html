@@ -3,11 +3,25 @@
 </head>
 
 <body>
-	<!-- navbar  - you will be putting the login functions here -->
+</body>
+
+<template name="application_layout">
+	<header>
+		{{> yield "navbar"}}
+	</header>
+	<article>
+		{{> yield}}
+	</article>
+	<footer>
+		{{> yield "footer"}}
+	</footer>
+</template>
+
+<template name="navbar">
 	<nav class="navbar navbar-default">
 		<div class="container">
 			<div class="navbar-header">
-				<a class="navbar-brand" href="#">
+				<a class="navbar-brand" href="/">
 					Site Ace
 				</a>
 				<div class="navbar-brand">
@@ -16,21 +30,13 @@
 			</div>
 		</div>
 	</nav>
-
-	<div class="container">
-		{{#if currentUser}}
-		{{> website_form}}
-		{{/if}}
-		{{> website_list}}
-	</div>
-</body>
-
+</template>
 
 <template name="website_form">
 	<div class="add-website-container">
 		<a class="btn btn-default js-toggle-website-form" href="#">
-		<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-	</a> Add website
+			<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+		</a> Add website
 	</div>
 	<div id="website_form" class="hidden_div">
 		<form class="js-save-website-form">
@@ -54,26 +60,90 @@
 
 <!-- template that displays several website items -->
 <template name="website_list">
-	<ol class="website-list">
-		{{#each websites}}
-		{{>website_item}}
-		{{/each}}
-	</ol>
+	<div class="container">
+		{{#if currentUser}}
+		{{> website_form}}
+		{{/if}}
+		<ol class="website-list list-unstyled">
+			{{#each websites}}
+			{{>website}}
+			{{/each}}
+		</ol>
+	</div>
 </template>
 
 <!-- template that displays individual website entries -->
-<template name="website_item">
+<template name="website">
 	<li>
-		<a href="{{url}}">{{title}}</a> {{#if votes}} {{votes}} vote(s) {{/if}}
-		<p>
-			{{description}}
-		</p>
-		<a href="#" class="btn btn-default js-upvote">
-			<span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
-		</a>
-		<a href="#" class="btn btn-default js-downvote">
-			<span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
-		</a>
-		<!-- you will be putting your up and down vote buttons in here! -->
+		<a href="/website/{{_id}}">{{title}}</a>
+
+		<small>{{total_votes}} vote(s) and {{total_comments}} comments</small>
+
+		<p><a href="{{url}}">{{url}}</a></p>
+		
+		<p>{{description}}</p>
+		<p><small>{{created_on}}</small></p>
+
+		<div class="vote-controllers">
+			<a href="#" class="btn btn-default js-upvote">
+				<span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+			</a>
+			<a href="#" class="btn btn-default js-downvote">
+				<span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+			</a>
+		</div>
+
 	</li>
 </template>
+
+<!-- display details -->
+
+<template name="website_details">
+	<div class="container">
+		<article class="website-details">
+			<h1>{{ title }} <small>{{total_votes}} vote(s) and {{total_comments}} comments</small></h1>
+			<p><a href="{{url}}">{{url}}</a></p>
+			<p>{{description}}</p>
+		</article>
+	</div>
+</template>
+
+<template name="comments_list">
+	{{> comments_form}}
+	{{#if comments}}
+	<div class="container">
+		<ol class="comments-list list-unstyled">
+			{{#each comments}}
+			<li>
+				{{> comment}}
+			</li>
+			{{/each}}
+		</ol>
+	</div>
+	{{/if}}
+</template>
+
+<template name="comment">
+	<h4>{{author_name}} <small>{{ created_on }}</small></h4>
+	<p>{{content}}</p>
+</template>
+
+<template name="comments_form">
+	<div class="container">
+		<form class="js-add-comment">
+			<div class="row">
+				<div class="col-md-5">
+					<div class="form-group">
+						<textarea name="content" class="form-control"></textarea>
+					</div>
+					<div class="form-group">
+						<button type="submit" class="btn btn-default">
+							Submit
+						</button>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+</template>
+

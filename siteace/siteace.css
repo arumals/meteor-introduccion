@@ -3,7 +3,41 @@
 	display:none;
 }
 
-.add-website-container,
-#website_form {
-	margin: 20px 0;
+#website_form,
+.website-list
+ {
+	margin: 20px 0 0;
+}
+
+.website-list li {
+	margin-bottom: 10px;
+}
+
+.vote-controllers {
+	margin: 10px 0;
+}
+
+.vote-controllers a {
+	font-size: 9px;
+}
+
+p {
+	margin: 0;
+}
+
+.website-details {
+	margin-bottom: 20px;
+}
+
+.comments-list p,
+.comments-list h4 {
+	margin: 0;
+}
+
+.comments-list {
+	margin-top: 20px;
+}
+
+.comments-list li {
+	margin-bottom: 10px;
 }

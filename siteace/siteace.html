@@ -18,16 +18,20 @@
 	</nav>
 
 	<div class="container">
+		{{#if currentUser}}
 		{{> website_form}}
+		{{/if}}
 		{{> website_list}}
 	</div>
 </body>
 
 
 <template name="website_form">
-	<a class="btn btn-default js-toggle-website-form" href="#">
+	<div class="add-website-container">
+		<a class="btn btn-default js-toggle-website-form" href="#">
 		<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-	</a>
+	</a> Add website
+	</div>
 	<div id="website_form" class="hidden_div">
 		<form class="js-save-website-form">
 			<div class="form-group">
@@ -50,7 +54,7 @@
 
 <!-- template that displays several website items -->
 <template name="website_list">
-	<ol>
+	<ol class="website-list">
 		{{#each websites}}
 		{{>website_item}}
 		{{/each}}
@@ -60,7 +64,7 @@
 <!-- template that displays individual website entries -->
 <template name="website_item">
 	<li>
-		<a href="{{url}}">{{title}}</a>
+		<a href="{{url}}">{{title}}</a> {{#if votes}} {{votes}} vote(s) {{/if}}
 		<p>
 			{{description}}
 		</p>

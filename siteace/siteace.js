@@ -1,7 +1,21 @@
 Websites = new Mongo.Collection("websites");
 
+// Security over remove and insert for Websites
+Websites.allow({
+	insert : function (user_id, doc) {
+		return Meteor.user();
+	},
+	remove : function (user_id, doc) {
+		return false;
+	},
+	update : function (user_id, doc) {
+		return Meteor.user();
+	}
+});
+
 if (Meteor.isClient) {
 
+	// Auhtentication using username and email
 	Accounts.ui.config({
 		passwordSignupFields : "USERNAME_AND_EMAIL"
 	});
@@ -13,7 +27,7 @@ if (Meteor.isClient) {
 	// helper function that returns all available websites
 	Template.website_list.helpers({
 		websites:function(){
-			return Websites.find({});
+			return Websites.find({},{ sort : { votes : -1 }});
 		}
 	});
 
@@ -24,24 +38,22 @@ if (Meteor.isClient) {
 
 	Template.website_item.events({
 		"click .js-upvote":function(event){
-			// example of how you can access the id for the website in the database
-			// (this is the data context for the template)
-			var website_id = this._id;
-			console.log("Up voting website with id "+website_id);
-			// put the code in here to add a vote to a website!
 
-			return false;// prevent the button from reloading the page
+			if(Meteor.user()){
+				Websites.update({ _id : this._id },{ $inc : { votes : 1 }});
+			}
+
+			event.preventDefault();
+
 		}, 
 		"click .js-downvote":function(event){
 
-			// example of how you can access the id for the website in the database
-			// (this is the data context for the template)
-			var website_id = this._id;
-			console.log("Down voting website with id "+website_id);
+			if (Meteor.user()) {
+				Websites.update({ _id : this._id },{ $inc : { votes : -1 }});
+			};
 
-			// put the code in here to remove a vote from a website!
+			event.preventDefault();
 
-			return false;// prevent the button from reloading the page
 		}
 	})
 
@@ -50,14 +62,23 @@ if (Meteor.isClient) {
 			$("#website_form").toggle('slow');
 		}, 
 		"submit .js-save-website-form":function(event){
-
-			// here is an example of how to get the url out of the form:
-			var url = event.target.url.value;
-			console.log("The url they entered is: "+url);
 			
-			//  put your website saving code in here!	
+			//  put your website saving code in here!
+			if(Meteor.user()){
 
-			return false;// stop the form submit from reloading the page
+				console.log("Insert new website");
+
+				Websites.insert({
+					title : 		event.target.title.value,
+					url : 			event.target.url.value,
+					description : 	event.target.description.value,
+					createdOn : 	new Date()
+				});
+
+			}
+
+			// prevent propagation
+			event.preventDefault();
 
 		}
 	});
@@ -65,35 +86,44 @@ if (Meteor.isClient) {
 
 
 if (Meteor.isServer) {
+
 	// start up function that creates entries in the Websites databases.
-  Meteor.startup(function () {
+	Meteor.startup(function () {
+
     // code to run on server at startup
     if (!Websites.findOne()){
+    	
     	console.log("No websites yet. Creating starter data.");
-    	  Websites.insert({
+    	
+    	Websites.insert({
     		title:"Goldsmiths Computing Department", 
     		url:"http://www.gold.ac.uk/computing/", 
     		description:"This is where this course was developed.", 
     		createdOn:new Date()
     	});
-    	 Websites.insert({
+    	
+    	Websites.insert({
     		title:"University of London", 
     		url:"http://www.londoninternational.ac.uk/courses/undergraduate/goldsmiths/bsc-creative-computing-bsc-diploma-work-entry-route", 
     		description:"University of London International Programme.", 
     		createdOn:new Date()
     	});
-    	 Websites.insert({
+    	
+    	Websites.insert({
     		title:"Coursera", 
     		url:"http://www.coursera.org", 
     		description:"Universal access to the world’s best education.", 
     		createdOn:new Date()
     	});
+    	
     	Websites.insert({
     		title:"Google", 
     		url:"http://www.google.com", 
     		description:"Popular search engine.", 
     		createdOn:new Date()
     	});
+
     }
-  });
+
+});
 }

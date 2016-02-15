@@ -2,3 +2,8 @@
 .hidden_div{
 	display:none;
 }
+
+.add-website-container,
+#website_form {
+	margin: 20px 0;
+}

@@ -1,8 +1,77 @@
 Images = new Mongo.Collection("images");
-
+3
 if (Meteor.isClient) {
 
-    Template.images.helpers({images:Images.find({},{ sort : { created_on : -1, rating : -1 }})});
+    Session.set('image_limit',8);
+
+    lastScrollTop = 0;
+
+    $(window).scroll(function (event) {
+
+        var scrollTop = $(this).scrollTop();
+
+        // if we are reching the bottom of the window
+        if($(window).scrollTop() + $(window).height() > $(document).height() - 100){
+            
+            var scrollTop = $(this).scrollTop();
+
+            if(scrollTop > lastScrollTop){
+                Session.set('image_limit', Session.get('image_limit') + 4);
+            }
+
+            lastScrollTop = scrollTop;
+
+        }
+
+    });
+
+    Accounts.ui.config({
+        passwordSignupFields : "USERNAME_AND_EMAIL"
+    });
+
+    Template.images.helpers({
+        images : function () {
+
+            if (Session.get('user_filter')) {
+
+                return Images.find({created_by : Session.get('user_filter')},{ 
+                    sort : {  created_on : -1,  rating : -1 },
+                    limit : Session.get('image_limit')
+                });
+
+            }
+
+            return Images.find({},{ 
+                sort : {  created_on : -1, rating : -1 },
+                limit : Session.get('image_limit')
+            });
+
+        },
+        getUser : function (user_id) {
+            var user = Meteor.users.findOne({ _id : user_id });
+            if (user) {
+                return user.username;
+            } else {
+                return "anonymous";
+            }
+        },
+        filtering_images : function () {
+            return Session.get('user_filter');
+        },
+        getFilterUser :function () {
+            return Meteor.users.findOne({ _id : Session.get('user_filter') }).username ;
+        }
+    });
+
+    Template.body.helpers({
+        username : function () {
+            if (Meteor.user()) {
+                return Meteor.user().username;
+            }
+
+            return "anonymous internet user";
+        }
+    });
 
     Template.images.events({
         'click .js-image' : function(event){
@@ -21,26 +90,40 @@ if (Meteor.isClient) {
         },
         'click .js-show-image-form' : function  (event) {
             $('#image_form_modal').modal('show');
+        },
+        'click .js-set-user-filter' : function (event) {
+            Session.set('user_filter', this.created_by);
+            event.preventDefault();
+        },
+        'click .js-unset-image-filter' : function (event) {
+            Session.set('user_filter',null);
+            event.preventDefault();
         }
     });
 
     Template.image_add_form.events({
         'submit .js-add-image' : function (event) {
+            
             var img_src, img_alt;
+
             img_src = event.target.img_src.value;
             img_alt = event.target.img_alt.value;
-            
-            console.log("src : " + img_src + " alt: " + img_alt);
-            
-            Images.insert({ 
-                img_src : img_src, 
-                img_alt : img_alt,
-                created_on : new Date()
-            });
+
+            if (Meteor.user()) {
+              
+                Images.insert({ 
+                    img_src : img_src, 
+                    img_alt : img_alt,
+                    created_on : new Date(),
+                    created_by : Meteor.user()._id
+                });
+
+            };
 
             event.preventDefault();
 
             $('#image_form_modal').modal('hide');
+
         }
     });
 
